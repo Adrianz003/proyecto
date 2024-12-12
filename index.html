@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monitoreo de Incendios</title>
+  <script src="https://cdn.jsdelivr.net/npm/particle-api-js/dist/particle.min.js"></script>
+</head>
+<body>
+  <h1>Estado del Sistema de Detección de Incendios</h1>
+  <div id="status">Cargando...</div>
+
+  <script>
+    const accessToken = 'TU_ACCESS_TOKEN_DE_PARTICLE';
+    const deviceId = 'TU_DEVICE_ID_DE_PARTICLE';
+
+    const particle = new Particle();
+    particle.getEventStream({ deviceId, auth: accessToken }).then(function (stream) {
+      stream.on('event', function (event) {
+        document.getElementById('status').innerText = event.name === 'fireDetected' ? '¡Fuego detectado! Activando sistema de extinción' : 'No hay fuego';
+      });
+    });
+  </script>
+</body>
+</html>
