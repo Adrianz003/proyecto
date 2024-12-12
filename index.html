@@ -1,23 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monitoreo de Incendios</title>
   <script src="https://cdn.jsdelivr.net/npm/particle-api-js/dist/particle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #status {
+      font-size: 1.5rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      background-color: #eee;
+      color: #000;
+      text-align: center;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .fire {
+      background-color: #ff4d4d;
+      color: #fff;
+    }
+
+    .safe {
+      background-color: #4caf50;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
   <h1>Estado del Sistema de Detección de Incendios</h1>
   <div id="status">Cargando...</div>
 
   <script>
-    const accessToken = 'TU_ACCESS_TOKEN_DE_PARTICLE';
-    const deviceId = 'TU_DEVICE_ID_DE_PARTICLE';
+    const accessToken = '4575c31f1e1aa26d938b67b8e9698690af427cdc';
+    const deviceId = '0a10aced202194944a058ae4';
 
     const particle = new Particle();
-    particle.getEventStream({ deviceId, auth: accessToken }).then(function (stream) {
-      stream.on('event', function (event) {
-        document.getElementById('status').innerText = event.name === 'fireDetected' ? '¡Fuego detectado! Activando sistema de extinción' : 'No hay fuego';
+
+    // Función para actualizar el estado en la página
+    function updateStatus(message, isFire) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerText = message;
+      statusDiv.className = isFire ? 'fire' : 'safe';
+    }
+
+    // Configurar la conexión con el evento
+    particle.getEventStream({ deviceId, auth: accessToken })
+      .then(function (stream) {
+        updateStatus('Esperando eventos...', false);
+
+        stream.on('event', function (event) {
+          if (event.name === 'fireDetected') {
+            updateStatus('¡Fuego detectado! Activando sistema de extinción.', true);
+          } else {
+            updateStatus('No hay fuego.', false);
+          }
+        });
+      })
+      .catch(function (error) {
+        console.error('Error al conectar con el dispositivo:', error);
+        updateStatus('Error al conectar con el dispositivo.', false);
       });
-    });
   </script>
 </body>
 </html>
