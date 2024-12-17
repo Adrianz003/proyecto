@@ -14,9 +14,15 @@
       justify-content: center;
       height: 100vh;
       background-color: #f4f4f4;
+      margin: 0;
     }
-    h1 { color: #333; }
-    #status { margin: 10px; font-size: 1.2rem; }
+    h1 { color: #333; margin-bottom: 20px; }
+    #status { margin: 10px; font-size: 1.2rem; text-align: center; }
+    img {
+      max-width: 300px;
+      height: auto;
+      margin: 20px 0;
+    }
     button {
       margin-top: 10px;
       padding: 10px 20px;
@@ -30,6 +36,7 @@
 <body>
   <h1>Estado del Sistema de Detección de Incendios</h1>
   <div id="status">Cargando...</div>
+  <img id="statusImage" src="menu.png" alt="Imagen del estado">
 
   <!-- Botones para encender/apagar el ventilador -->
   <button id="fanOn" class="on">Encender Ventilador</button>
@@ -40,9 +47,14 @@
     const deviceId = '0a10aced202194944a058ae4'; // ID del dispositivo
     const particle = new Particle();
 
-    // Función para actualizar el estado en la página
-    function updateStatus(message) {
-      document.getElementById('status').innerText = message;
+    // Referencias a los elementos del DOM
+    const statusDiv = document.getElementById('status');
+    const statusImage = document.getElementById('statusImage');
+
+    // Función para actualizar el estado y la imagen en la página
+    function updateStatus(message, imageSrc) {
+      statusDiv.innerText = message;
+      statusImage.src = imageSrc;
     }
 
     // Escuchar eventos de Particle Cloud
@@ -50,30 +62,32 @@
       .then(stream => {
         stream.on('event', event => {
           if (event.name === 'fireDetected') {
-            if (event.data.includes("Humo") || event.data.includes("Llama")) {
-              updateStatus('¡Fuego detectado! Activando sistema.');
+            if (event.data.includes("Humo")) {
+              updateStatus('¡Humo detectado! Activando sistema.', 'humo.png');
+            } else if (event.data.includes("Llama")) {
+              updateStatus('¡Fuego detectado! Activando sistema.', 'fuego.png');
             } else {
-              updateStatus('Sistema en estado normal.');
+              updateStatus('Sistema en estado normal.', 'normal.png');
             }
           }
         });
       })
       .catch(error => {
         console.error("Error al conectar con el dispositivo:", error);
-        updateStatus("Error al conectar con el dispositivo.");
+        updateStatus("Error al conectar con el dispositivo.", 'menu.png');
       });
 
     // Funciones para controlar el ventilador
     document.getElementById('fanOn').addEventListener('click', () => {
       particle.callFunction({ deviceId, name: 'fanControl', argument: 'ON', auth: accessToken })
-        .then(() => updateStatus("Ventilador encendido."))
-        .catch(err => updateStatus("Error al encender el ventilador."));
+        .then(() => updateStatus("Ventilador encendido.", 'normal.png'))
+        .catch(() => updateStatus("Error al encender el ventilador.", 'menu.png'));
     });
 
     document.getElementById('fanOff').addEventListener('click', () => {
       particle.callFunction({ deviceId, name: 'fanControl', argument: 'OFF', auth: accessToken })
-        .then(() => updateStatus("Ventilador apagado."))
-        .catch(err => updateStatus("Error al apagar el ventilador."));
+        .then(() => updateStatus("Ventilador apagado.", 'normal.png'))
+        .catch(() => updateStatus("Error al apagar el ventilador.", 'menu.png'));
     });
   </script>
 </body>
